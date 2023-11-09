@@ -104,6 +104,11 @@ def run(
 
     # Dataloader
     bs = 1  # batch_size
+
+    webcam = False
+    screenshot = False
+    img01 = cv2.imread("./data/images/exhibit.jpg")
+
     if webcam:
         view_img = check_imshow(warn=True)
         dataset = LoadStreams(source, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride)
@@ -111,7 +116,8 @@ def run(
     elif screenshot:
         dataset = LoadScreenshots(source, img_size=imgsz, stride=stride, auto=pt)
     else:
-        dataset = LoadImages(source, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride)
+        # dataset = LoadImages(source, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride)
+        dataset = LoadImages(source, cv_img=img01, img_size=imgsz, stride=stride, auto=pt, vid_stride=vid_stride)
     vid_path, vid_writer = [None] * bs, [None] * bs
 
     # Run inference
@@ -276,7 +282,7 @@ def parse_opt():
 
 
 def main(opt):
-    check_requirements(ROOT / 'requirements.txt', exclude=('tensorboard', 'thop'))
+    # check_requirements(ROOT / 'requirements.txt', exclude=('tensorboard', 'thop'))
     run(**vars(opt))
 
 

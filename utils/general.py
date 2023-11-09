@@ -1075,8 +1075,9 @@ def increment_path(path, exist_ok=False, sep='', mkdir=False):
         # Method 1
         for n in range(2, 9999):
             p = f'{path}{sep}{n}{suffix}'  # increment path
-            if not os.path.exists(p):  #
-                break
+            break
+            # if not os.path.exists(p):  #
+            #     break
         path = Path(p)
 
         # Method 2 (deprecated)

@@ -238,7 +238,7 @@ class LoadScreenshots:
 
 class LoadImages:
     # YOLOv5 image/video dataloader, i.e. `python detect.py --source image.jpg/vid.mp4`
-    def __init__(self, path, img_size=640, stride=32, auto=True, transforms=None, vid_stride=1):
+    def __init__(self, path, cv_img, img_size=640, stride=32, auto=True, transforms=None, vid_stride=1):
         if isinstance(path, str) and Path(path).suffix == '.txt':  # *.txt file with img/vid/dir on each line
             path = Path(path).read_text().rsplit()
         files = []
@@ -259,17 +259,21 @@ class LoadImages:
 
         self.img_size = img_size
         self.stride = stride
-        self.files = images + videos
-        self.nf = ni + nv  # number of files
-        self.video_flag = [False] * ni + [True] * nv
+        self.files = images + videos #no use
+        # self.nf = ni + nv  # number of files
+        self.nf = 1
+        # self.video_flag = [False] * ni + [True] * nv  #no use
+        self.video_flag = [False]
         self.mode = 'image'
         self.auto = auto
         self.transforms = transforms  # optional
         self.vid_stride = vid_stride  # video frame-rate stride
-        if any(videos):
-            self._new_video(videos[0])  # new video
-        else:
-            self.cap = None
+        self.cv_img = cv_img #new parameter
+        # if any(videos):
+        #     self._new_video(videos[0])  # new video
+        # else:
+        #     self.cap = None
+        self.cap = None
         assert self.nf > 0, f'No images or videos found in {p}. ' \
                             f'Supported formats are:\nimages: {IMG_FORMATS}\nvideos: {VID_FORMATS}'
 
@@ -282,31 +286,37 @@ class LoadImages:
             raise StopIteration
         path = self.files[self.count]
 
-        if self.video_flag[self.count]:
-            # Read video
-            self.mode = 'video'
-            for _ in range(self.vid_stride):
-                self.cap.grab()
-            ret_val, im0 = self.cap.retrieve()
-            while not ret_val:
-                self.count += 1
-                self.cap.release()
-                if self.count == self.nf:  # last video
-                    raise StopIteration
-                path = self.files[self.count]
-                self._new_video(path)
-                ret_val, im0 = self.cap.read()
+        # if self.video_flag[self.count]:
+        #     # Read video
+        #     self.mode = 'video'
+        #     for _ in range(self.vid_stride):
+        #         self.cap.grab()
+        #     ret_val, im0 = self.cap.retrieve()
+        #     while not ret_val:
+        #         self.count += 1
+        #         self.cap.release()
+        #         if self.count == self.nf:  # last video
+        #             raise StopIteration
+        #         path = self.files[self.count]
+        #         self._new_video(path)
+        #         ret_val, im0 = self.cap.read()
 
-            self.frame += 1
-            # im0 = self._cv2_rotate(im0)  # for use if cv2 autorotation is False
-            s = f'video {self.count + 1}/{self.nf} ({self.frame}/{self.frames}) {path}: '
+        #     self.frame += 1
+        #     # im0 = self._cv2_rotate(im0)  # for use if cv2 autorotation is False
+        #     s = f'video {self.count + 1}/{self.nf} ({self.frame}/{self.frames}) {path}: '
 
-        else:
-            # Read image
-            self.count += 1
-            im0 = cv2.imread(path)  # BGR
-            assert im0 is not None, f'Image Not Found {path}'
-            s = f'image {self.count}/{self.nf} {path}: '
+        # else:
+        #     # Read image
+        #     self.count += 1
+        #     im0 = cv2.imread(path)  # BGR
+        #     assert im0 is not None, f'Image Not Found {path}'
+        #     s = f'image {self.count}/{self.nf} {path}: '
+
+        self.count += 1
+        # im0 = cv2.imread(path)  # BGR
+        im0 = self.cv_img
+        assert im0 is not None, f'Image Not Found {path}'
+        s = f'image {self.count}/{self.nf} {path}: '
 
         if self.transforms:
             im = self.transforms(im0)  # transforms

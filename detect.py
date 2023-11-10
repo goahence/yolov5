@@ -52,8 +52,10 @@ from utils.general import (LOGGER, Profile, check_file, check_img_size, check_im
 from utils.torch_utils import select_device, smart_inference_mode
 
 
+
 @smart_inference_mode()
 def run(
+        model,
         weights=ROOT / 'yolov5s.pt',  # model path or triton URL
         source=ROOT / 'data/images',  # file/dir/URL/glob/screen/0(webcam)
         data=ROOT / 'data/coco128.yaml',  # dataset.yaml path
@@ -97,8 +99,8 @@ def run(
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
     # Load model
-    device = select_device(device)
-    model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
+    # device = select_device(device)
+    # model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
@@ -217,20 +219,20 @@ def run(
             if save_img:
                 if dataset.mode == 'image':
                     cv2.imwrite(save_path, im0)
-                else:  # 'video' or 'stream'
-                    if vid_path[i] != save_path:  # new video
-                        vid_path[i] = save_path
-                        if isinstance(vid_writer[i], cv2.VideoWriter):
-                            vid_writer[i].release()  # release previous video writer
-                        if vid_cap:  # video
-                            fps = vid_cap.get(cv2.CAP_PROP_FPS)
-                            w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                            h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                        else:  # stream
-                            fps, w, h = 30, im0.shape[1], im0.shape[0]
-                        save_path = str(Path(save_path).with_suffix('.mp4'))  # force *.mp4 suffix on results videos
-                        vid_writer[i] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
-                    vid_writer[i].write(im0)
+                # else:  # 'video' or 'stream'
+                #     if vid_path[i] != save_path:  # new video
+                #         vid_path[i] = save_path
+                #         if isinstance(vid_writer[i], cv2.VideoWriter):
+                #             vid_writer[i].release()  # release previous video writer
+                #         if vid_cap:  # video
+                #             fps = vid_cap.get(cv2.CAP_PROP_FPS)
+                #             w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                #             h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                #         else:  # stream
+                #             fps, w, h = 30, im0.shape[1], im0.shape[0]
+                #         save_path = str(Path(save_path).with_suffix('.mp4'))  # force *.mp4 suffix on results videos
+                #         vid_writer[i] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
+                #     vid_writer[i].write(im0)
 
         # Print time (inference-only)
         LOGGER.info(f"{s}{'' if len(det) else '(no detections), '}{dt[1].dt * 1E3:.1f}ms")
@@ -280,12 +282,22 @@ def parse_opt():
     print_args(vars(opt))
     return opt
 
+def init_model():
+    device = select_device('0')
+    global modelx
+    modelx = DetectMultiBackend(ROOT / 'yolov5s.pt', device=device, dnn=False, data=ROOT / 'data/coco128.yaml', fp16=False)
+ 
 
-def main(opt):
+def main():
     # check_requirements(ROOT / 'requirements.txt', exclude=('tensorboard', 'thop'))
-    run(**vars(opt))
+    # device = select_device('0')
+    # modelx = DetectMultiBackend(ROOT / 'yolov5s.pt', device=device, dnn=False, data=ROOT / 'data/coco128.yaml', fp16=False)
+    # run(**vars(opt))
+    init_model()
+    run(model=modelx)
+    # run()
 
 
 if __name__ == '__main__':
-    opt = parse_opt()
-    main(opt)
+    # opt = parse_opt()
+    main()
